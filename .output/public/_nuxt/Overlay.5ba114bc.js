@@ -1,1 +1,0 @@
-import{_ as e}from"./_plugin-vue_export-helper.a1a6add7.js";import{o as c,b as o}from"./entry.d78a7e75.js";const t={},n={class:"fixed bg-black opacity-70 z-50 top-0 left-0 w-screen h-screen"};function r(s,_){return c(),o("div",n)}const i=e(t,[["render",r]]);export{i as default};
