@@ -1,0 +1,1 @@
+import{_ as e}from"./_plugin-vue_export-helper.a1a6add7.js";import{o,b as t,r as s}from"./entry.d78a7e75.js";const a={},c={class:"card-footer px-6 py-2 text-sm bg-white dark:bg-slate-800 border-t border-gray-900/10 dark:border-gray-50/[0.2]"};function n(r,_){return o(),t("div",c,[s(r.$slots,"default")])}const l=e(a,[["render",n]]);export{l as default};
