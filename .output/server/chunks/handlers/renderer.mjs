@@ -1,54 +1,23 @@
-import { renderResourceHeaders, createRenderer } from 'vue-bundle-renderer/runtime';
-import { e as eventHandler, b as useNitroApp, f as useRuntimeConfig, g as getQuery, h as getRouteRules, w as writeEarlyHints } from '../nitro/node-server.mjs';
+import { createRenderer } from 'vue-bundle-renderer/runtime';
+import { eventHandler, getQuery, createError } from 'h3';
 import { renderToString } from 'vue/server-renderer';
 import { joinURL } from 'ufo';
+import { u as useNitroApp, a as useRuntimeConfig, g as getRouteRules } from '../nitro/node-server.mjs';
 import 'node-fetch-native/polyfill';
 import 'http';
 import 'https';
 import 'destr';
-import 'cookie-es';
 import 'ohmyfetch';
 import 'unenv/runtime/fetch/index';
 import 'hookable';
 import 'scule';
 import 'ohash';
 import 'unstorage';
-import 'unstorage/drivers/overlay';
-import 'unstorage/drivers/memory';
 import 'defu';
-import 'fs';
+import 'radix3';
+import 'node:fs';
+import 'node:url';
 import 'pathe';
-import 'url';
-import 'axios';
-import 'unified';
-import 'mdast-util-to-string';
-import 'micromark/lib/preprocess.js';
-import 'micromark/lib/postprocess.js';
-import 'unist-util-stringify-position';
-import 'micromark-util-character';
-import 'micromark-util-chunked';
-import 'micromark-util-resolve-all';
-import 'remark-emoji';
-import 'rehype-slug';
-import 'remark-squeeze-paragraphs';
-import 'rehype-external-links';
-import 'remark-gfm';
-import 'rehype-sort-attribute-values';
-import 'rehype-sort-attributes';
-import 'rehype-raw';
-import 'remark-mdc';
-import 'remark-parse';
-import 'remark-rehype';
-import 'mdast-util-to-hast';
-import 'detab';
-import 'unist-builder';
-import 'mdurl';
-import 'unist-util-position';
-import 'html-tags';
-import 'slugify';
-import 'unist-util-visit';
-import 'shiki-es';
-import 'unenv/runtime/npm/consola';
 
 function defineRenderHandler(handler) {
   return eventHandler(async (event) => {
@@ -327,7 +296,7 @@ globalThis.__buildAssetsURL = buildAssetsURL;
 globalThis.__publicAssetsURL = publicAssetsURL;
 const getClientManifest = () => import('../app/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 const getServerEntry = () => import('../app/server.mjs').then((r) => r.default || r);
-const getSSRStyles = () => import('../app/styles.mjs').then(function (n) { return n.s; }).then((r) => r.default || r);
+const getSSRStyles = () => import('../app/styles.mjs').then((r) => r.default || r);
 const getSSRRenderer = lazyCachedFunction(async () => {
   const manifest = await getClientManifest();
   if (!manifest) {
@@ -381,6 +350,9 @@ const getSPARenderer = lazyCachedFunction(async () => {
 const PAYLOAD_URL_RE = /\/_payload(\.[a-zA-Z0-9]+)?.js(\?.*)?$/;
 const renderer = defineRenderHandler(async (event) => {
   const ssrError = event.req.url?.startsWith("/__nuxt_error") ? getQuery(event) : null;
+  if (ssrError && event.req.socket.readyState !== "readOnly") {
+    throw createError("Cannot directly render error page!");
+  }
   let url = ssrError?.url || event.req.url;
   const isRenderingPayload = PAYLOAD_URL_RE.test(url);
   if (isRenderingPayload) {
@@ -398,10 +370,6 @@ const renderer = defineRenderHandler(async (event) => {
     payload: ssrError ? { error: ssrError } : {}
   };
   const renderer = ssrContext.noSSR ? await getSPARenderer() : await getSSRRenderer();
-  if (!isRenderingPayload && !false) {
-    const { link } = renderResourceHeaders({}, renderer.rendererContext);
-    writeEarlyHints(event, link);
-  }
   const _rendered = await renderer.renderToString(ssrContext).catch((err) => {
     if (!ssrError) {
       throw ssrContext.payload?.error || err;
@@ -486,18 +454,14 @@ function renderHTMLDocument(html) {
 </html>`;
 }
 async function renderInlineStyles(usedModules) {
-  const { entryCSS } = await getClientManifest();
   const styleMap = await getSSRStyles();
   const inlinedStyles = /* @__PURE__ */ new Set();
-  for (const mod of ["entry", ...usedModules]) {
+  for (const mod of usedModules) {
     if (mod in styleMap) {
       for (const style of await styleMap[mod]()) {
         inlinedStyles.add(`<style>${style}</style>`);
       }
     }
-  }
-  for (const css of entryCSS?.css || []) {
-    inlinedStyles.add(`<link rel="stylesheet" href=${JSON.stringify(buildAssetsURL(css))} media="print" onload="this.media='all'; this.onload=null;">`);
   }
   return Array.from(inlinedStyles).join("");
 }

@@ -1,1 +1,0 @@
-import{a as r,w as s,v as o,u as n,o as i,b as c,r as u,i as l}from"./entry.b41f10e0.js";const p={class:"relative overflow-auto px-6 py-2"},v=r({__name:"Tab",props:{name:{type:String,required:!0},title:{type:String,required:!0}},setup(e){const t=l("activeTab");return(a,d)=>s((i(),c("div",p,[u(a.$slots,"default")],512)),[[o,n(t)===e.name]])}});export{v as default};
